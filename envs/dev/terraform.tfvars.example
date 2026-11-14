@@ -1,0 +1,11 @@
+workload       = "platform"
+environment    = "dev"
+location       = "westeurope"
+location_short = "weu"
+
+aks_admin_group_object_ids = ["00000000-0000-0000-0000-000000000000"]
+
+tags = {
+  owner       = "platform-team"
+  cost_center = "engineering"
+}

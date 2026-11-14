@@ -1,0 +1,4 @@
+resource_group_name  = "rg-tfstate"
+storage_account_name = "sttfstateCHANGEME"
+container_name       = "tfstate"
+key                  = "landing-zone/dev.tfstate"

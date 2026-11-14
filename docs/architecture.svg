@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7aa2f7"/></marker>
+  </defs>
+  <rect width="1200" height="800" fill="#0f172a"/>
+  <text x="60" y="70" fill="#f8fafc" font-size="34" font-weight="700">Azure Landing Zone with Terraform</text>
+  <text x="60" y="105" fill="#94a3b8" font-size="18">Hub-spoke network · private AKS · ACR and Key Vault behind private endpoints · OIDC pipeline</text>
+
+  <!-- subscription -->
+  <rect x="40" y="140" width="1120" height="560" rx="18" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="60" y="170" fill="#64748b" font-size="15">Azure subscription · westeurope</text>
+
+  <!-- hub -->
+  <rect x="70" y="200" width="330" height="460" rx="14" fill="#111c33" stroke="#3b82f6" stroke-width="2"/>
+  <text x="90" y="235" fill="#93c5fd" font-size="20" font-weight="600">Hub VNet  10.0.0.0/16</text>
+  <rect x="95" y="260" width="280" height="70" rx="10" fill="#1e293b" stroke="#475569"/>
+  <text x="115" y="292" fill="#e2e8f0" font-size="16">snet-shared</text>
+  <text x="115" y="315" fill="#94a3b8" font-size="13">jump host / DNS resolver slot</text>
+  <rect x="95" y="350" width="280" height="150" rx="10" fill="#1e293b" stroke="#475569"/>
+  <text x="115" y="382" fill="#e2e8f0" font-size="16">Private DNS zones</text>
+  <text x="115" y="410" fill="#94a3b8" font-size="13">privatelink.vaultcore.azure.net</text>
+  <text x="115" y="432" fill="#94a3b8" font-size="13">privatelink.azurecr.io</text>
+  <text x="115" y="462" fill="#94a3b8" font-size="13">linked to hub + every spoke</text>
+  <rect x="95" y="520" width="280" height="110" rx="10" fill="#1e293b" stroke="#475569"/>
+  <text x="115" y="552" fill="#e2e8f0" font-size="16">Log Analytics</text>
+  <text x="115" y="578" fill="#94a3b8" font-size="13">Container Insights (managed identity)</text>
+  <text x="115" y="600" fill="#94a3b8" font-size="13">daily ingestion cap</text>
+
+  <!-- peering -->
+  <line x1="400" y1="430" x2="490" y2="430" stroke="#7aa2f7" stroke-width="3" marker-end="url(#a)"/>
+  <line x1="490" y1="450" x2="400" y2="450" stroke="#7aa2f7" stroke-width="3" marker-end="url(#a)"/>
+  <text x="408" y="480" fill="#94a3b8" font-size="13">VNet peering</text>
+
+  <!-- spoke -->
+  <rect x="490" y="200" width="640" height="460" rx="14" fill="#111c33" stroke="#22c55e" stroke-width="2"/>
+  <text x="510" y="235" fill="#86efac" font-size="20" font-weight="600">AKS spoke VNet  10.10.0.0/16</text>
+
+  <rect x="515" y="260" width="360" height="370" rx="10" fill="#1e293b" stroke="#475569"/>
+  <text x="535" y="292" fill="#e2e8f0" font-size="16">snet-aks-nodes  /20</text>
+  <rect x="535" y="310" width="320" height="300" rx="10" fill="#0b1324" stroke="#22c55e"/>
+  <text x="555" y="342" fill="#86efac" font-size="17" font-weight="600">Private AKS cluster</text>
+  <text x="555" y="372" fill="#cbd5e1" font-size="14">• API server has no public IP</text>
+  <text x="555" y="398" fill="#cbd5e1" font-size="14">• Azure CNI overlay + Cilium policy</text>
+  <text x="555" y="424" fill="#cbd5e1" font-size="14">• Entra ID + Azure RBAC, local accounts off</text>
+  <text x="555" y="450" fill="#cbd5e1" font-size="14">• Workload identity (OIDC issuer)</text>
+  <text x="555" y="476" fill="#cbd5e1" font-size="14">• system pool (critical add-ons only)</text>
+  <text x="555" y="502" fill="#cbd5e1" font-size="14">• user pool, autoscaling, 3 zones</text>
+  <text x="555" y="528" fill="#cbd5e1" font-size="14">• Key Vault CSI driver, secret rotation</text>
+  <text x="555" y="554" fill="#cbd5e1" font-size="14">• auto patch upgrades, Sat 02:00 window</text>
+  <text x="555" y="580" fill="#cbd5e1" font-size="14">• ephemeral OS disks</text>
+
+  <rect x="895" y="260" width="215" height="370" rx="10" fill="#1e293b" stroke="#475569"/>
+  <text x="912" y="292" fill="#e2e8f0" font-size="16">snet-private-endpoints</text>
+  <text x="912" y="314" fill="#94a3b8" font-size="12">NSG: 443 from VNet only</text>
+  <rect x="912" y="335" width="180" height="120" rx="10" fill="#0b1324" stroke="#f59e0b"/>
+  <text x="930" y="368" fill="#fcd34d" font-size="16" font-weight="600">ACR Premium</text>
+  <text x="930" y="394" fill="#cbd5e1" font-size="13">public access off</text>
+  <text x="930" y="416" fill="#cbd5e1" font-size="13">AcrPull → kubelet</text>
+  <text x="930" y="438" fill="#cbd5e1" font-size="13">admin user off</text>
+  <rect x="912" y="480" width="180" height="125" rx="10" fill="#0b1324" stroke="#f59e0b"/>
+  <text x="930" y="513" fill="#fcd34d" font-size="16" font-weight="600">Key Vault</text>
+  <text x="930" y="539" fill="#cbd5e1" font-size="13">RBAC, purge protect</text>
+  <text x="930" y="561" fill="#cbd5e1" font-size="13">public access off</text>
+  <text x="930" y="583" fill="#cbd5e1" font-size="13">Secrets User → CSI</text>
+  <line x1="855" y1="400" x2="908" y2="400" stroke="#7aa2f7" stroke-width="2.5" marker-end="url(#a)"/>
+  <line x1="855" y1="540" x2="908" y2="540" stroke="#7aa2f7" stroke-width="2.5" marker-end="url(#a)"/>
+
+  <!-- pipeline -->
+  <rect x="60" y="720" width="1080" height="56" rx="12" fill="#1e293b" stroke="#334155"/>
+  <text x="85" y="755" fill="#e2e8f0" font-size="16"><tspan font-weight="700" fill="#93c5fd">GitHub Actions</tspan>   fmt → validate → tflint → checkov → plan (PR comment) → manual approval → apply   ·   OIDC, no stored secrets</text>
+</svg>

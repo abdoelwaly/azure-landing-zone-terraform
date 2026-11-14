@@ -1,0 +1,126 @@
+name: terraform
+
+on:
+  pull_request:
+    paths: ["envs/**", "modules/**", ".github/workflows/terraform.yml"]
+  push:
+    branches: [main]
+    paths: ["envs/**", "modules/**", ".github/workflows/terraform.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write       # OIDC login to Azure, no stored secrets
+  pull-requests: write  # post the plan as a PR comment
+
+env:
+  TF_IN_AUTOMATION: "true"
+  WORKDIR: envs/dev
+  ARM_USE_OIDC: "true"
+  ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.15.x
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: terraform validate
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+
+      - uses: terraform-linters/setup-tflint@v6
+      - name: tflint
+        run: |
+          tflint --init
+          tflint --recursive --minimum-failure-severity=warning
+
+      - name: checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: terraform
+          quiet: true
+          soft_fail: false
+          skip_check: CKV_AZURE_4,CKV_AZURE_117 # see docs/checkov-exceptions.md
+
+  plan:
+    needs: static-checks
+    if: vars.AZURE_CLIENT_ID != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.15.x
+
+      - name: init
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          terraform init -input=false \
+            -backend-config="resource_group_name=${{ vars.TFSTATE_RG }}" \
+            -backend-config="storage_account_name=${{ vars.TFSTATE_SA }}" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=landing-zone/dev.tfstate"
+
+      - name: plan
+        id: plan
+        working-directory: ${{ env.WORKDIR }}
+        shell: bash # runs with -eo pipefail, so a failed plan is not hidden by tee
+        run: |
+          terraform plan -input=false -no-color -out=tfplan | tee plan.txt
+          echo "summary=$(grep -E '^Plan:|^No changes' plan.txt | tail -1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: tfplan
+          path: ${{ env.WORKDIR }}/tfplan
+
+      - name: comment plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('${{ env.WORKDIR }}/plan.txt', 'utf8').slice(-60000);
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: `### Terraform plan: ${{ steps.plan.outputs.summary }}\n<details><summary>Show plan</summary>\n\n\`\`\`\n${plan}\n\`\`\`\n</details>`
+            });
+
+  apply:
+    needs: plan
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: dev  # add required reviewers on this environment for a manual gate
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.15.x
+      - uses: actions/download-artifact@v8
+        with:
+          name: tfplan
+          path: ${{ env.WORKDIR }}
+
+      - name: apply
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          terraform init -input=false \
+            -backend-config="resource_group_name=${{ vars.TFSTATE_RG }}" \
+            -backend-config="storage_account_name=${{ vars.TFSTATE_SA }}" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=landing-zone/dev.tfstate"
+          terraform apply -input=false tfplan
