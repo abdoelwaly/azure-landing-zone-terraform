@@ -29,6 +29,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   local_account_disabled    = true
   oidc_issuer_enabled       = true
   workload_identity_enabled = true
+  azure_policy_enabled      = true
   automatic_upgrade_channel = "patch"
   node_os_upgrade_channel   = "NodeImage"
 
@@ -38,6 +39,8 @@ resource "azurerm_kubernetes_cluster" "this" {
     vnet_subnet_id               = var.node_subnet_id
     zones                        = var.zones
     only_critical_addons_enabled = true
+    host_encryption_enabled      = true # needs the EncryptionAtHost feature on the subscription
+    max_pods                     = 110
     auto_scaling_enabled         = true
     min_count                    = 2
     max_count                    = 3
@@ -97,18 +100,20 @@ resource "azurerm_kubernetes_cluster" "this" {
 }
 
 resource "azurerm_kubernetes_cluster_node_pool" "user" {
-  name                  = "user"
-  kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
-  vm_size               = var.user_node_vm_size
-  vnet_subnet_id        = var.node_subnet_id
-  zones                 = var.zones
-  mode                  = "User"
-  auto_scaling_enabled  = true
-  min_count             = var.user_node_min_count
-  max_count             = var.user_node_max_count
-  os_disk_type          = "Ephemeral"
-  os_disk_size_gb       = 64
-  tags                  = var.tags
+  name                    = "user"
+  kubernetes_cluster_id   = azurerm_kubernetes_cluster.this.id
+  vm_size                 = var.user_node_vm_size
+  vnet_subnet_id          = var.node_subnet_id
+  zones                   = var.zones
+  mode                    = "User"
+  host_encryption_enabled = true
+  max_pods                = 110
+  auto_scaling_enabled    = true
+  min_count               = var.user_node_min_count
+  max_count               = var.user_node_max_count
+  os_disk_type            = "Ephemeral"
+  os_disk_size_gb         = 64
+  tags                    = var.tags
 
   upgrade_settings {
     max_surge = "33%"

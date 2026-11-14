@@ -10,7 +10,7 @@ A production-style starting point for running containers on Azure: a hub-spoke n
 |---|---|---|
 | Network | Hub VNet, AKS spoke VNet, two-way peering, NSGs | Private endpoints get their own subnet with an NSG that only allows HTTPS from the VNet |
 | DNS | `privatelink.vaultcore.azure.net`, `privatelink.azurecr.io` | Zones live in the hub and are linked to every VNet, so name resolution works from anywhere in the estate |
-| AKS | Private cluster, system and user node pools | No public API, Entra ID + Azure RBAC with local accounts disabled, workload identity, Cilium network policy, three zones, automatic patch upgrades in a maintenance window |
+| AKS | Private cluster, system and user node pools | No public API, Entra ID + Azure RBAC with local accounts disabled, workload identity, Azure Policy, Cilium network policy, host encryption, three zones, automatic patch upgrades in a maintenance window |
 | Registry | ACR Premium | Public access and admin user off; the kubelet identity gets `AcrPull` only |
 | Secrets | Key Vault | RBAC mode, purge protection, public access off; the CSI driver identity gets `Key Vault Secrets User` only |
 | Monitoring | Log Analytics | Container Insights through managed identity, with a daily ingestion cap to protect the budget |
@@ -34,7 +34,7 @@ Adding `test` or `prod` means copying `envs/dev`, changing the variables (for ex
 
 ## Run it
 
-Prerequisites: Terraform 1.7+, Azure CLI, and a storage account for remote state.
+Prerequisites: Terraform 1.7+, Azure CLI, a storage account for remote state, and the `EncryptionAtHost` feature registered on the subscription (`az feature register --namespace Microsoft.Compute --name EncryptionAtHost`).
 
 ```bash
 az login

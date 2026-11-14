@@ -6,6 +6,7 @@ resource "azurerm_container_registry" "this" {
   admin_enabled                 = false
   public_network_access_enabled = false
   zone_redundancy_enabled       = var.zone_redundancy_enabled
+  data_endpoint_enabled         = true # dedicated, private data endpoint per region
   tags                          = var.tags
 
   retention_policy_in_days = 7

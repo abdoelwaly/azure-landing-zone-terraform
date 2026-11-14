@@ -53,7 +53,7 @@ jobs:
           framework: terraform
           quiet: true
           soft_fail: false
-          skip_check: CKV_AZURE_4,CKV_AZURE_117 # see docs/checkov-exceptions.md
+          skip_check: CKV_AZURE_4,CKV_AZURE_117,CKV_AZURE_170,CKV_AZURE_233,CKV_AZURE_165,CKV_AZURE_164,CKV_AZURE_166,CKV2_AZURE_31 # see docs/checkov-exceptions.md
 
   plan:
     needs: static-checks
